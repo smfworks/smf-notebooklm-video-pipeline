@@ -17,7 +17,24 @@ expect() {
 
 expect "$(slugify 'WisdomForge: Epictetus')" "wisdomforge-epictetus" "slugify notebook name"
 expect "$(slugify '---Hello---World---')" "hello-world" "slugify strips edges"
+expect "$(slugify '!!!')" "untitled" "slugify empty fallback"
 expect "$(ffmpeg_escape 'A:B')" 'A\:B' "ffmpeg colon escape"
+expect "$(ffmpeg_escape '100%')" '100\%' "ffmpeg percent escape"
+
+tmpf="$(mktemp)"
+if got="$(pick_font /no/such.ttf "$tmpf")"; then
+  expect "$got" "$tmpf" "pick_font first existing"
+else
+  echo "FAIL pick_font"
+  fail=1
+fi
+rm -f "$tmpf"
+if pick_font /no/such.ttf >/dev/null; then
+  echo "FAIL pick_font should miss"
+  fail=1
+else
+  echo "ok   pick_font miss"
+fi
 
 if validate_format brief && validate_format explainer; then
   echo "ok   format allowlist"

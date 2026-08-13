@@ -29,7 +29,6 @@ OUTPUT_DIR="./output"
 validate_format "$FORMAT"
 validate_style "$STYLE"
 require_cmd notebooklm
-require_cmd jq
 
 if [[ ! -f "$STEERING_PROMPT" ]]; then
   echo "error: steering prompt not found: $STEERING_PROMPT" >&2
@@ -43,10 +42,11 @@ echo "Notebook: $NOTEBOOK_NAME"
 echo "Prompt: $STEERING_PROMPT"
 echo "Format: $FORMAT | Style: $STYLE"
 
-# Step 1: Create notebook
+# Step 1: Create notebook and keep it selected via --use.
+# Do not pick notebooks list[0] — that is whatever NotebookLM returns first,
+# which is often an older notebook.
 echo "→ Creating notebook..."
 notebooklm create "$NOTEBOOK_NAME" --use
-NOTEBOOK_ID=$(notebooklm notebooks list --json 2>/dev/null | jq -r '.[0].id' 2>/dev/null || echo "active")
 
 # Step 2: Generate video
 echo "→ Generating video (this takes 5-15 minutes for Brief, 10-20 for Explainer)..."

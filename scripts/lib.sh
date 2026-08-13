@@ -11,7 +11,12 @@ require_cmd() {
 }
 
 slugify() {
-  echo "$1" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$//'
+  local slug
+  slug="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$//')"
+  if [[ -z "$slug" ]]; then
+    slug="untitled"
+  fi
+  printf '%s' "$slug"
 }
 
 validate_format() {
@@ -39,6 +44,18 @@ ffmpeg_escape() {
   local s="$1"
   s="${s//\\/\\\\}"
   s="${s//:/\\:}"
+  s="${s//%/\\%}"
   s="${s//\'/\'\\\'\'}"
   printf '%s' "$s"
+}
+
+pick_font() {
+  local f
+  for f in "$@"; do
+    if [[ -f "$f" ]]; then
+      printf '%s' "$f"
+      return 0
+    fi
+  done
+  return 1
 }
