@@ -17,6 +17,10 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "${SCRIPT_DIR}/lib.sh"
+
 if [[ $# -lt 3 ]]; then
   echo "Usage: overlay.sh <input.mp4> <philosopher> <lesson_title> [subtitle]"
   echo "Example: overlay.sh output/epictetus.mp4 'Epictetus' 'The Dichotomy of Control'"
@@ -24,9 +28,17 @@ if [[ $# -lt 3 ]]; then
 fi
 
 INPUT="$1"
-PHILOSOPHER="$2"
-LESSON_TITLE="$3"
-SUBTITLE="${4:-Curated by Aiona for WisdomForge, an SMF Works project}"
+PHILOSOPHER="$(ffmpeg_escape "$2")"
+LESSON_TITLE="$(ffmpeg_escape "$3")"
+SUBTITLE="$(ffmpeg_escape "${4:-Curated by Aiona for WisdomForge, an SMF Works project}")"
+
+require_cmd ffmpeg
+require_cmd ffprobe
+
+if [[ ! -f "$INPUT" ]]; then
+  echo "error: input video not found: $INPUT" >&2
+  exit 2
+fi
 
 # Resolve absolute path
 INPUT="$(cd "$(dirname "$INPUT")" && pwd)/$(basename "$INPUT")"

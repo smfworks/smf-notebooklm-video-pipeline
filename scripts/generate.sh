@@ -10,6 +10,10 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "${SCRIPT_DIR}/lib.sh"
+
 if [[ $# -lt 2 ]]; then
   echo "Usage: generate.sh <notebook_name> <steering_prompt_file> [format] [style]"
   echo "Example: generate.sh 'WisdomForge: Epictetus' ./steering-prompts/epictetus-dichotomy.md brief whiteboard"
@@ -21,6 +25,16 @@ STEERING_PROMPT="$2"
 FORMAT="${3:-brief}"
 STYLE="${4:-whiteboard}"
 OUTPUT_DIR="./output"
+
+validate_format "$FORMAT"
+validate_style "$STYLE"
+require_cmd notebooklm
+require_cmd jq
+
+if [[ ! -f "$STEERING_PROMPT" ]]; then
+  echo "error: steering prompt not found: $STEERING_PROMPT" >&2
+  exit 2
+fi
 
 mkdir -p "$OUTPUT_DIR"
 
@@ -43,7 +57,7 @@ notebooklm generate video \
   --wait
 
 # Step 3: Download video
-SLUG_NAME=$(echo "$NOTEBOOK_NAME" | tr '[:upper:]' '[:lower]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')
+SLUG_NAME="$(slugify "$NOTEBOOK_NAME")"
 OUTPUT_FILE="${OUTPUT_DIR}/${SLUG_NAME}.mp4"
 
 echo "→ Downloading video..."
