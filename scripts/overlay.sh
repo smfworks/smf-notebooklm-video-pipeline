@@ -17,6 +17,10 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "${SCRIPT_DIR}/lib.sh"
+
 if [[ $# -lt 3 ]]; then
   echo "Usage: overlay.sh <input.mp4> <philosopher> <lesson_title> [subtitle]"
   echo "Example: overlay.sh output/epictetus.mp4 'Epictetus' 'The Dichotomy of Control'"
@@ -24,9 +28,18 @@ if [[ $# -lt 3 ]]; then
 fi
 
 INPUT="$1"
-PHILOSOPHER="$2"
-LESSON_TITLE="$3"
-SUBTITLE="${4:-Curated by Aiona for WisdomForge, an SMF Works project}"
+PHILOSOPHER="$(ffmpeg_escape "$2")"
+LESSON_TITLE="$(ffmpeg_escape "$3")"
+SUBTITLE="$(ffmpeg_escape "${4:-Curated by Aiona for WisdomForge, an SMF Works project}")"
+
+require_cmd ffmpeg
+require_cmd ffprobe
+require_cmd bc
+
+if [[ ! -f "$INPUT" ]]; then
+  echo "error: input video not found: $INPUT" >&2
+  exit 2
+fi
 
 # Resolve absolute path
 INPUT="$(cd "$(dirname "$INPUT")" && pwd)/$(basename "$INPUT")"
@@ -38,10 +51,25 @@ OUTPUT="${INPUT_DIR}/${INPUT_BASE}-final.mp4"
 TEMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TEMP_DIR"' EXIT
 
-# Font paths
-FONT_SERIF="/usr/share/fonts/truetype/ebgaramond/EBGaramond12-Bold.ttf"
-FONT_SANS="/usr/share/fonts/truetype/roboto/unhinted/RobotoTTF/Roboto-Light.ttf"
-FONT_SANS_BOLD="/usr/share/fonts/truetype/roboto/unhinted/RobotoTTF/Roboto-Medium.ttf"
+# Fonts: branded first, then common system serif/sans so CI/dev boxes still work.
+FONT_SERIF="$(pick_font \
+  /usr/share/fonts/truetype/ebgaramond/EBGaramond12-Bold.ttf \
+  /usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf \
+  /usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf)" || {
+  echo "error: no serif font found (install fonts-ebgaramond, fonts-dejavu, or fonts-liberation)" >&2
+  exit 2
+}
+FONT_SANS="$(pick_font \
+  /usr/share/fonts/truetype/roboto/unhinted/RobotoTTF/Roboto-Light.ttf \
+  /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf \
+  /usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf)" || {
+  echo "error: no sans font found" >&2
+  exit 2
+}
+FONT_SANS_BOLD="$(pick_font \
+  /usr/share/fonts/truetype/roboto/unhinted/RobotoTTF/Roboto-Medium.ttf \
+  /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf \
+  /usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf)" || FONT_SANS_BOLD="$FONT_SANS"
 
 # Colors
 BG_COLOR="0x1a1a2e"       # Deep navy
