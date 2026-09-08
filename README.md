@@ -33,6 +33,12 @@ The key insight: **NotebookLM is a research and synthesis engine, not a producti
 
 See [HOWTO.md](./HOWTO.md) for the complete setup and usage guide, including instructions for feeding this document to an OpenClaw or Hermes AI agent to set up the pipeline automatically.
 
+**Local path (no NotebookLM, no Spark):** Grok 4.6 writes the Ember VO, Kokoro speaks it, ffmpeg Ken Burns the stills, then the same overlay. See [LOCAL.md](./LOCAL.md).
+
+```bash
+./scripts/run-local-explainer.sh --source ./sources/example/epictetus-dichotomy-of-control.md --title "The Dichotomy of Control"
+```
+
 ## Requirements
 
 - **Google Workspace** account with NotebookLM access (Business Standard or above)
@@ -47,9 +53,12 @@ See [HOWTO.md](./HOWTO.md) for the complete setup and usage guide, including ins
 smf-notebooklm-video-pipeline/
 ├── README.md              # This file — overview and context
 ├── HOWTO.md               # Complete setup and usage guide
+├── LOCAL.md               # Spark-free Grok + Kokoro + Ken Burns path
 ├── scripts/
 │   ├── overlay.sh         # Video overlay pipeline (title card, watermark, end card)
-│   └── generate.sh        # NotebookLM notebook creation and video generation
+│   ├── generate.sh        # NotebookLM notebook creation and video generation
+│   ├── run-local-explainer.sh
+│   └── local_explainer.py # Grok writer + Kokoro TTS + Ken Burns
 ├── steering-prompts/
 │   ├── template.md        # Base steering prompt template
 │   └── examples/          # Example steering prompts (Epictetus, Marcus Aurelius, Seneca)
