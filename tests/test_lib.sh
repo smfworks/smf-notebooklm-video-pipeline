@@ -53,6 +53,7 @@ fi
 bash -n "${ROOT}/scripts/generate.sh"
 bash -n "${ROOT}/scripts/overlay.sh"
 bash -n "${ROOT}/scripts/lib.sh"
+bash -n "${ROOT}/scripts/run-local-explainer.sh"
 echo "ok   bash -n scripts"
 
 exit "$fail"

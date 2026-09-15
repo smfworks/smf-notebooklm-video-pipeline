@@ -16,3 +16,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Syntax + helper tests
         run: bash tests/test_lib.sh
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Local explainer unit tests
+        run: python3 tests/test_local_explainer.py
